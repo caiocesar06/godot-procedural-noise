@@ -1,91 +1,110 @@
-# Godot Perlin Noise GDExtension
+# Godot Procedural Noise GDExtension
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/caiocesar06/godot-perlin-noise/build_addon.yml?branch=master&style=flat-square)](https://github.com/caiocesar06/godot-perlin-noise/actions)
 
-Ferramenta de geração procedural baseada no algoritmo de Perlin Noise, desenvolvida nativamente em C++ via GDExtension para a Godot Engine 4. Este projeto integra paralelismo massivo em CPU utilizando OpenMP, focado em alta performance para geração de terrenos e texturas em tempo real.
+Biblioteca de geração procedural para Godot 4 desenvolvida em C++ com GDExtension.
 
-Este repositório é fruto do projeto de Iniciação Científica (PIC1422-2025) do CEFET-MG, servindo também como módulo base para outros projetos de geração procedural.
+Atualmente, o projeto inclui:
+
+- Perlin Noise
+- Simplex Noise
+
+O objetivo é evoluir para uma suíte de múltiplos algoritmos de ruído, com foco em alta performance para terrenos, texturas e simulações.
+
+Este repositório é fruto do projeto de Iniciação Científica (PIC1422-2025) do CEFET-MG e também serve como base para outros projetos de geração procedural.
 
 ---
 
-## 📦 Como Usar o Addon (Instalação Rápida)
+## 📦 Instalação do Addon (Usuários)
 
-**Público-alvo:** Equipe de extensão, designers e desenvolvedores de jogos que desejam utilizar o Perlin Noise sem compilar código em C++.
+Se você quer apenas usar o addon no seu jogo (sem compilar C++), siga por Actions.
 
-Graças ao nosso pipeline de CI/CD, os binários multiplataforma são gerados automaticamente. Para instalar o Addon no seu jogo:
+### Requisitos para uso
 
-1. Acesse a aba [Actions](../../actions) deste repositório.
-2. Clique no fluxo de execução (Workflow) mais recente que possua um ícone verde de "Success".
-3. Role até o final da página e, na seção **Artifacts**, baixe o `.zip` correspondente ao seu sistema operacional (Windows ou Linux).
-4. Extraia o conteúdo baixado. Você verá uma pasta `addons/`.
-5. Arraste a pasta `addons/` inteira para dentro do diretório raiz (`res://`) do seu projeto Godot.
+- Godot Engine 4.x
 
-O Godot detectará automaticamente a GDExtension.
+Downloads oficiais:
 
-### Exemplo de Uso (GDScript)
+- Godot: https://godotengine.org/download
 
-Uma vez instalado, a classe `PerlinNoise` estará disponível globalmente:
+### Passo a passo (via GitHub Releases)
+
+1. Acesse a página de Releases do projeto: [Actions](../../actions)
+2. Abra a versão estável mais recente.
+3. Na seção Assets, baixe o arquivo .zip correspondente ao seu sistema operacional (por exemplo: Windows x86_64 ou Linux x86_64).
+4. Extraia o .zip e localize a pasta addons/.
+5. Copie a pasta addons/ inteira para a raiz do seu projeto Godot (res://).
+6. No Godot, abra Project > Project Settings > Plugins e habilite o plugin, caso ele apareça desativado.
+
+Com isso, as classes do addon ficam disponíveis no GDScript.
+
+### Exemplo de uso (GDScript)
 
 ```gdscript
 func _ready():
-    # Inicializa o ruído com uma seed aleatória
-    var mapa_ruido = PerlinNoise.new()
+    var noise = PerlinNoise.new()
 
-    # Configura os parâmetros fractais
-    mapa_ruido.set_octaves(6)
-    mapa_ruido.set_persistence(0.5)
-    mapa_ruido.set_lacunarity(2.0)
+    noise.set_octaves(6)
+    noise.set_persistence(0.5)
+    noise.set_lacunarity(2.0)
 
-    # Amostra um valor no espaço 2D
-    var elevacao = mapa_ruido.sample_2D(10.5, 20.1)
-    print("Elevação: ", elevacao)
-
+    var elevation = noise.get_noise_2D(10.5, 20.1)
+    print("Elevation: ", elevation)
 ```
 
 ---
 
-## 🛠️ Como Desenvolver e Compilar a Fonte
+## 🛠️ Desenvolvimento e Compilação (Contribuidores)
 
-**Público-alvo:** Pesquisadores e engenheiros interessados em modificar a matemática do algoritmo ou a infraestrutura do C++.
+Use esta seção se você quer alterar o código C++ ou adicionar novos algoritmos de ruído.
 
-### Pré-requisitos
+### Requisitos para build
 
-* **Godot 4.x** (Executável do editor)
-* **CMake** (Mínimo versão 3.16)
-* Compilador C++ com suporte a **OpenMP** (GCC/MinGW em Windows, GCC nativo em Linux)
-* **Python** (necessário para a compilação do `godot-cpp`)
+- Godot Engine 4.x (para testar o projeto)
+- CMake 3.16 ou superior
+- Ninja (recomendado)
+- Python 3.x (necessário para build do submódulo godot-cpp)
+- Compilador C++ com suporte a OpenMP
 
-### 1. Clonagem Estrita
+Downloads oficiais:
 
-A engine do Godot (o repositório `godot-cpp`) está linkada como um submódulo. É **obrigatório** usar a flag `--recursive` ao clonar o projeto para que a pasta do motor não venha vazia:
+- CMake: https://cmake.org/download/
+- Ninja: https://ninja-build.org/
+- Python: https://www.python.org/downloads/
+- MinGW-w64 (Windows/GCC): https://www.mingw-w64.org/
+
+### 1. Clone com submódulos
 
 ```bash
 git clone --recursive https://github.com/caiocesar06/godot-perlin-noise.git
 cd godot-perlin-noise
-
 ```
 
-### 2. Geração e Compilação (CMake)
-
-O script de construção (`CMakeLists.txt`) extrai as dependências do sistema e posiciona os artefatos nativamente na estrutura de Addon correta (`project/addons/perlin_noise/bin/`).
+Se você já clonou sem --recursive:
 
 ```bash
-# Gera os arquivos de configuração (utilizando Ninja como gerador recomendado)
-cmake -B build -G "Ninja"
-
-# Inicia a compilação paralela do C++ e do godot-cpp
-cmake --build build --config Release
-
+git submodule update --init --recursive
 ```
 
-Após o build, abra a pasta `project/` contida no repositório com o editor do Godot para acessar a cena de testes e o visualizador C++ isolado.
+### 2. Configure e compile
+
+```bash
+cmake -B build -G "Ninja"
+cmake --build build --config Release
+```
+
+Os binários são posicionados na estrutura do addon, em project/addons/perlin_noise/bin/.
+
+### 3. Rode no Godot
+
+Abra a pasta project/ deste repositório no Godot para testar cenas e ferramentas.
 
 ---
 
 ## 🏛️ Créditos e Licença
 
-* **Pesquisador Principal:** Caio César Nascimento Silva
-* **Orientação:** Prof. Luis Alberto D'Afonseca
-* **Instituição:** CEFET-MG — Departamento de Matemática (NG)
+- Pesquisador Principal: Caio César Nascimento Silva
+- Orientação: Prof. Luis Alberto D'Afonseca
+- Instituição: CEFET-MG - Departamento de Matemática (NG)
 
-Desenvolvido no escopo do Edital DPPG Nº 94/2025 — PIBIC FAPEMIG.
+Desenvolvido no escopo do Edital DPPG No 94/2025 - PIBIC FAPEMIG.
