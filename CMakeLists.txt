@@ -104,12 +104,12 @@ if(WIN32)
     set(LIB_SUFFIX ".dll")
 
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_link_options(
-            perlin_noise
-            PRIVATE
-            -static-libgcc
-            -static-libstdc++
-        )
+        # target_link_options(
+        #     perlin_noise
+        #     PRIVATE
+        #     -static-libgcc
+        #     -static-libstdc++
+        # )
 
         get_filename_component(
             MINGW_BIN_DIR
@@ -120,6 +120,8 @@ if(WIN32)
         set(
             MINGW_RUNTIME_DLLS
             "${MINGW_BIN_DIR}/libwinpthread-1.dll"
+            "${MINGW_BIN_DIR}/libgcc_s_seh-1.dll"
+            "${MINGW_BIN_DIR}/libstdc++-6.dll"
         )
 
         if(OpenMP_CXX_FOUND)
