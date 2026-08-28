@@ -3,18 +3,66 @@ name: Build Perlin Noise Addon
 on:
   push:
     branches: [ "main", "master" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+permissions:
+  contents: write
 
 jobs:
+  # O núcleo matemático não depende de godot-cpp, então este job roda sem
+  # o submódulo e termina em segundos. Se ele quebrar, não vale gastar os
+  # minutos de compilação da extensão.
+  test:
+    name: Testes do núcleo
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout do Repositório
+      uses: actions/checkout@v4
+
+    - name: Instalar dependências
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake ninja-build
+
+    - name: Configurar (sem godot-cpp)
+      run: >-
+        cmake -B build-core -G Ninja
+        -DCMAKE_BUILD_TYPE=Release
+        -DPERLIN_BUILD_EXTENSION=OFF
+
+    - name: Compilar
+      run: cmake --build build-core
+
+    - name: Rodar testes
+      run: ctest --test-dir build-core --output-on-failure
+
+    - name: Benchmark (informativo)
+      run: ./build-core/perlin_benchmark
+
   build:
+    name: ${{ matrix.name }}
+    needs: test
+
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
             name: Windows
           - os: ubuntu-latest
             name: Linux
+          - os: macos-latest
+            name: macOS
 
     runs-on: ${{ matrix.os }}
+
+    # macOS ainda está em avaliação: o Apple Clang não traz OpenMP e
+    # depende do libomp do Homebrew. Enquanto isso não estiver validado em
+    # uma máquina real, uma falha aqui não derruba a esteira.
+    continue-on-error: ${{ matrix.os == 'macos-latest' }}
 
     steps:
     - name: Checkout do Repositório
@@ -28,6 +76,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential cmake ninja-build
 
+    - name: Instalar dependências (macOS)
+      if: matrix.os == 'macos-latest'
+      run: brew install ninja libomp
+
     - name: Setup MSYS2 (Windows)
       if: matrix.os == 'windows-latest'
       uses: msys2/setup-msys2@v2
@@ -40,22 +92,45 @@ jobs:
           mingw-w64-ucrt-x86_64-ninja
           mingw-w64-ucrt-x86_64-python
 
-    - name: Configurar ccache (Cache de Compilação C++)
+    # ccache conflita com o MSYS2 no Windows; fica só no Linux e no macOS.
+    - name: Configurar ccache
+      if: matrix.os != 'windows-latest'
       uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ${{ matrix.os }}-ccache
 
     - name: Gerar arquivos de Build (Linux)
       if: matrix.os == 'ubuntu-latest'
-      run: cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      run: >-
+        cmake -B build -G Ninja
+        -DCMAKE_BUILD_TYPE=Release
+        -DPERLIN_BUILD_TESTS=OFF
+        -DPERLIN_BUILD_BENCHMARK=OFF
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+    - name: Gerar arquivos de Build (macOS)
+      if: matrix.os == 'macos-latest'
+      run: >-
+        cmake -B build -G Ninja
+        -DCMAKE_BUILD_TYPE=Release
+        -DPERLIN_BUILD_TESTS=OFF
+        -DPERLIN_BUILD_BENCHMARK=OFF
+        -DOpenMP_ROOT=$(brew --prefix libomp)
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
     - name: Gerar arquivos de Build (Windows)
       if: matrix.os == 'windows-latest'
       shell: msys2 {0}
-      run: cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+      run: >-
+        cmake -B build -G Ninja
+        -DCMAKE_BUILD_TYPE=Release
+        -DPERLIN_BUILD_TESTS=OFF
+        -DPERLIN_BUILD_BENCHMARK=OFF
 
-    - name: Compilar Binários (Linux)
-      if: matrix.os == 'ubuntu-latest'
+    - name: Compilar Binários (Unix)
+      if: matrix.os != 'windows-latest'
       run: cmake --build build
 
     - name: Compilar Binários (Windows)
@@ -63,8 +138,56 @@ jobs:
       shell: msys2 {0}
       run: cmake --build build
 
+    # Monta a estrutura plug and play: o usuário copia addons/ para a raiz
+    # do projeto Godot dele e acabou.
+    - name: Empacotar estrutura do addon
+      shell: bash
+      run: |
+        mkdir -p dist/addons/perlin_noise/bin
+        cp project/addons/perlin_noise/bin/* dist/addons/perlin_noise/bin/
+        ls -la dist/addons/perlin_noise/bin/
+
     - name: Upload dos Binários Gerados
       uses: actions/upload-artifact@v4
       with:
-        name: perlin-noise-${{ matrix.name }}-binaries
-        path: project/addons/perlin_noise/bin/
+        name: perlin-noise-${{ matrix.name }}
+        path: dist/
+
+  # Publica em Releases quando uma tag v* é empurrada -- a decisão da
+  # Reunião 12 que estava pendente. Commits normais continuam publicando
+  # apenas em Artifacts.
+  release:
+    name: Publicar Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Baixar todos os artefatos
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Compactar um zip por plataforma
+      run: |
+        mkdir -p release
+        cd artifacts
+        for dir in */; do
+          name="${dir%/}"
+          (cd "$name" && zip -r "../../release/${name}-${GITHUB_REF_NAME}.zip" addons)
+        done
+        ls -la ../release
+
+    - name: Criar Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: release/*.zip
+        generate_release_notes: true
+        body: |
+          Addon de ruído procedural para Godot 4.
+
+          Baixe o `.zip` do seu sistema operacional, extraia e copie a
+          pasta `addons/` para a raiz do seu projeto Godot. Feche e reabra
+          o editor.
+
+          Consulte o README para a referência da API.
