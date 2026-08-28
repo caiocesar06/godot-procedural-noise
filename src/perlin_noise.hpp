@@ -7,6 +7,18 @@ namespace godot {
     class PerlinNoise final : public NoiseBase {
         GDCLASS(PerlinNoise, NoiseBase)
 
+    public:
+        // Espelha FadeMode do núcleo. Existe separado porque o ClassDB
+        // exige um enum membro da classe registrada para expor constantes
+        // ao GDScript via BIND_ENUM_CONSTANT -- sem isso o Inspector
+        // mostra o dropdown, mas PerlinNoise.FADE_QUINTIC não existe no
+        // script. Os valores são fixados por static_assert no .cpp.
+        enum FadeType {
+            FADE_NONE = 0,
+            FADE_CUBIC,
+            FADE_QUINTIC
+        };
+
     private:
         PerlinCore _core;
 
@@ -27,3 +39,5 @@ namespace godot {
         double get_noise_3d(double x, double y, double z) const override;
     };
 }
+
+VARIANT_ENUM_CAST(godot::PerlinNoise::FadeType);

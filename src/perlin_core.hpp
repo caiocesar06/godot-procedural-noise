@@ -60,6 +60,31 @@ namespace godot {
 
 
         // --- Gradientes --- //
+        //
+        // Cota superior do ruido gradiente de Perlin em N dimensoes com
+        // gradientes de norma g: g * sqrt(N)/2. As duas tabelas abaixo
+        // nao tem a mesma norma, entao 2D e 3D NAO compartilham o mesmo
+        // range:
+        //
+        //   grad_2d  8 vetores de norma 1        -> cota sqrt(2)/2 ~ 0,707
+        //   grad_3d  12 arestas de norma sqrt(2) -> cota sqrt(6)/2 ~ 1,225
+        //
+        // A cota e FROUXA: sai do produto escalar maximo e ignora que os
+        // pesos de interpolacao nao podem estar todos no maximo ao mesmo
+        // tempo. Medido sobre 400 mil amostras (tests/test_core.cpp):
+        //
+        //   2D  max 0,7047  -- a cota e praticamente justa
+        //   3D  max 0,9863  -- longe da cota; nao passa de 1, nao satura
+        //
+        // Consequencia pratica: get_fbm_image_data e get_fbm_volume_data
+        // aplicam o mesmo (val + 1.0) * 127.5 nos dois casos, e o 2D ocupa
+        // ~70% da escala de cinza contra ~97% do 3D. Pior: o fBm
+        // normalizado pela soma das amplitudes concentra a distribuicao
+        // por TLC -- com 6 oitavas o 2D cai para 43% da escala. E dai que
+        // vem o aspecto lavado das imagens, nao de clipping.
+
+        static constexpr double SUPREMUM_2D = 0.70710678118654752;
+        static constexpr double SUPREMUM_3D = 1.22474487139158905;
 
         static inline float grad_2d(int hash, float x, float y) {
             static constexpr float G2D[8][2] = {
