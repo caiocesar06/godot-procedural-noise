@@ -1,4 +1,5 @@
 build/
+build-*/
 ./bin/
 CMakeCache.txt
 CMakeFiles/
@@ -14,6 +15,8 @@ project/addons/perlin_noise/bin/*.lib
 
 .vscode/
 *.code-workspace
+.claude
+CLAUDE.md
 
 .DS_Store
 Thumbs.db
