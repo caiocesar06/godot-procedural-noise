@@ -30,67 +30,33 @@ option(
     OFF
 )
 
+# O nucleo matematico (perlin_core.hpp, permutation_table.hpp,
+# fractal.hpp) nao depende de godot-cpp. Desligar PERLIN_BUILD_EXTENSION
+# permite compilar testes e benchmark sem sequer configurar o submodulo,
+# o que deixa a verificacao do nucleo em segundos em vez de minutos.
+option(
+    PERLIN_BUILD_EXTENSION
+    "Compila a GDExtension (exige o submodulo godot-cpp)"
+    ON
+)
+
+option(
+    PERLIN_BUILD_TESTS
+    "Compila os testes do nucleo matematico"
+    ON
+)
+
+option(
+    PERLIN_BUILD_BENCHMARK
+    "Compila o harness de benchmark"
+    ON
+)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-add_subdirectory(godot-cpp)
-
-add_library(
-    perlin_noise
-    SHARED
-    src/register_types.cpp
-    src/noise_base.cpp
-    src/perlin_noise.cpp
-)
-
-target_compile_features(
-    perlin_noise
-    PRIVATE
-    cxx_std_17
-)
-
-target_include_directories(
-    perlin_noise
-    PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/src"
-)
-
-target_link_libraries(
-    perlin_noise
-    PRIVATE
-    godot-cpp
-)
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(
-        perlin_noise
-        PRIVATE
-        $<$<CONFIG:Release>:-O3>
-        $<$<CONFIG:RelWithDebInfo>:-O2>
-    )
-
-    if(PERLIN_ENABLE_FAST_MATH)
-        target_compile_options(
-            perlin_noise
-            PRIVATE
-            $<$<CONFIG:Release>:-ffast-math>
-        )
-
-        message(
-            STATUS
-            "Fast-Math habilitado para builds Release."
-        )
-    endif()
-endif()
 
 find_package(OpenMP)
 
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(
-        perlin_noise
-        PRIVATE
-        OpenMP::OpenMP_CXX
-    )
-
     message(STATUS "OpenMP habilitado.")
 else()
     message(
@@ -99,98 +65,201 @@ else()
     )
 endif()
 
-if(WIN32)
-    set(LIB_PREFIX "")
-    set(LIB_SUFFIX ".dll")
+# Flags compartilhadas por todos os alvos. O benchmark precisa das mesmas
+# flags da extensao, senao mede outra coisa.
+function(perlin_apply_common_options TARGET_NAME)
+    target_compile_features(
+        ${TARGET_NAME}
+        PRIVATE
+        cxx_std_17
+    )
 
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        # target_link_options(
-        #     perlin_noise
-        #     PRIVATE
-        #     -static-libgcc
-        #     -static-libstdc++
-        # )
+    target_include_directories(
+        ${TARGET_NAME}
+        PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    )
 
-        get_filename_component(
-            MINGW_BIN_DIR
-            "${CMAKE_CXX_COMPILER}"
-            DIRECTORY
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(
+            ${TARGET_NAME}
+            PRIVATE
+            $<$<CONFIG:Release>:-O3>
+            $<$<CONFIG:RelWithDebInfo>:-O2>
         )
 
-        set(
-            MINGW_RUNTIME_DLLS
-            "${MINGW_BIN_DIR}/libwinpthread-1.dll"
-            "${MINGW_BIN_DIR}/libgcc_s_seh-1.dll"
-            "${MINGW_BIN_DIR}/libstdc++-6.dll"
-        )
-
-        if(OpenMP_CXX_FOUND)
-            list(
-                APPEND
-                MINGW_RUNTIME_DLLS
-                "${MINGW_BIN_DIR}/libgomp-1.dll"
+        if(PERLIN_ENABLE_FAST_MATH)
+            target_compile_options(
+                ${TARGET_NAME}
+                PRIVATE
+                $<$<CONFIG:Release>:-ffast-math>
             )
         endif()
-
-        foreach(RUNTIME_DLL IN LISTS MINGW_RUNTIME_DLLS)
-            if(EXISTS "${RUNTIME_DLL}")
-                add_custom_command(
-                    TARGET perlin_noise
-                    POST_BUILD
-                    COMMAND
-                        "${CMAKE_COMMAND}"
-                        -E copy_if_different
-                        "${RUNTIME_DLL}"
-                        "$<TARGET_FILE_DIR:perlin_noise>"
-                    VERBATIM
-                )
-            else()
-                message(
-                    WARNING
-                    "DLL de runtime nao encontrada: ${RUNTIME_DLL}"
-                )
-            endif()
-        endforeach()
     endif()
 
-elseif(APPLE)
-    set(LIB_PREFIX "lib")
-    set(LIB_SUFFIX ".dylib")
+    if(OpenMP_CXX_FOUND)
+        target_link_libraries(
+            ${TARGET_NAME}
+            PRIVATE
+            OpenMP::OpenMP_CXX
+        )
+    endif()
+endfunction()
 
-elseif(UNIX)
-    set(LIB_PREFIX "lib")
-    set(LIB_SUFFIX ".so")
-
-else()
+if(PERLIN_ENABLE_FAST_MATH)
     message(
-        FATAL_ERROR
-        "Sistema operacional nao suportado."
+        STATUS
+        "Fast-Math habilitado para builds Release."
     )
 endif()
 
-set(PERLIN_OUTPUT_DIRECTORY
-    "${CMAKE_CURRENT_SOURCE_DIR}/project/addons/perlin_noise/bin"
-)
+#-----------------------------------------------------------------------
+# GDExtension
+#-----------------------------------------------------------------------
 
-set_target_properties(
-    perlin_noise
-    PROPERTIES
-    PREFIX "${LIB_PREFIX}"
-    SUFFIX "${LIB_SUFFIX}"
+if(PERLIN_BUILD_EXTENSION)
+    add_subdirectory(godot-cpp)
 
-    LIBRARY_OUTPUT_DIRECTORY "${PERLIN_OUTPUT_DIRECTORY}"
-    RUNTIME_OUTPUT_DIRECTORY "${PERLIN_OUTPUT_DIRECTORY}"
-)
+    add_library(
+        perlin_noise
+        SHARED
+        src/register_types.cpp
+        src/noise_base.cpp
+        src/perlin_noise.cpp
+    )
 
-foreach(CONFIG Debug Release RelWithDebInfo MinSizeRel)
-    string(TOUPPER "${CONFIG}" CONFIG_UPPER)
+    perlin_apply_common_options(perlin_noise)
+
+    target_link_libraries(
+        perlin_noise
+        PRIVATE
+        godot-cpp
+    )
+
+    if(WIN32)
+        set(LIB_PREFIX "")
+        set(LIB_SUFFIX ".dll")
+
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            # A linkagem estatica (-static-libgcc -static-libstdc++) fica
+            # desligada de proposito: o Erro 126 e resolvido copiando as
+            # DLLs de runtime abaixo, e o manifesto .gdextension declara
+            # essas dependencias explicitamente.
+
+            get_filename_component(
+                MINGW_BIN_DIR
+                "${CMAKE_CXX_COMPILER}"
+                DIRECTORY
+            )
+
+            set(
+                MINGW_RUNTIME_DLLS
+                "${MINGW_BIN_DIR}/libwinpthread-1.dll"
+                "${MINGW_BIN_DIR}/libgcc_s_seh-1.dll"
+                "${MINGW_BIN_DIR}/libstdc++-6.dll"
+            )
+
+            if(OpenMP_CXX_FOUND)
+                list(
+                    APPEND
+                    MINGW_RUNTIME_DLLS
+                    "${MINGW_BIN_DIR}/libgomp-1.dll"
+                )
+            endif()
+
+            foreach(RUNTIME_DLL IN LISTS MINGW_RUNTIME_DLLS)
+                if(EXISTS "${RUNTIME_DLL}")
+                    add_custom_command(
+                        TARGET perlin_noise
+                        POST_BUILD
+                        COMMAND
+                            "${CMAKE_COMMAND}"
+                            -E copy_if_different
+                            "${RUNTIME_DLL}"
+                            "$<TARGET_FILE_DIR:perlin_noise>"
+                        VERBATIM
+                    )
+                else()
+                    message(
+                        WARNING
+                        "DLL de runtime nao encontrada: ${RUNTIME_DLL}"
+                    )
+                endif()
+            endforeach()
+        endif()
+
+    elseif(APPLE)
+        set(LIB_PREFIX "lib")
+        set(LIB_SUFFIX ".dylib")
+
+    elseif(UNIX)
+        set(LIB_PREFIX "lib")
+        set(LIB_SUFFIX ".so")
+
+    else()
+        message(
+            FATAL_ERROR
+            "Sistema operacional nao suportado."
+        )
+    endif()
+
+    set(PERLIN_OUTPUT_DIRECTORY
+        "${CMAKE_CURRENT_SOURCE_DIR}/project/addons/perlin_noise/bin"
+    )
 
     set_target_properties(
         perlin_noise
         PROPERTIES
-        "LIBRARY_OUTPUT_DIRECTORY_${CONFIG_UPPER}"
-            "${PERLIN_OUTPUT_DIRECTORY}"
-        "RUNTIME_OUTPUT_DIRECTORY_${CONFIG_UPPER}"
-            "${PERLIN_OUTPUT_DIRECTORY}"
+        PREFIX "${LIB_PREFIX}"
+        SUFFIX "${LIB_SUFFIX}"
+
+        LIBRARY_OUTPUT_DIRECTORY "${PERLIN_OUTPUT_DIRECTORY}"
+        RUNTIME_OUTPUT_DIRECTORY "${PERLIN_OUTPUT_DIRECTORY}"
     )
-endforeach()
+
+    foreach(CONFIG Debug Release RelWithDebInfo MinSizeRel)
+        string(TOUPPER "${CONFIG}" CONFIG_UPPER)
+
+        set_target_properties(
+            perlin_noise
+            PROPERTIES
+            "LIBRARY_OUTPUT_DIRECTORY_${CONFIG_UPPER}"
+                "${PERLIN_OUTPUT_DIRECTORY}"
+            "RUNTIME_OUTPUT_DIRECTORY_${CONFIG_UPPER}"
+                "${PERLIN_OUTPUT_DIRECTORY}"
+        )
+    endforeach()
+endif()
+
+#-----------------------------------------------------------------------
+# Testes do nucleo -- sem godot-cpp
+#-----------------------------------------------------------------------
+
+if(PERLIN_BUILD_TESTS)
+    enable_testing()
+
+    add_executable(
+        perlin_tests
+        tests/test_core.cpp
+    )
+
+    perlin_apply_common_options(perlin_tests)
+
+    add_test(
+        NAME nucleo_matematico
+        COMMAND perlin_tests
+    )
+endif()
+
+#-----------------------------------------------------------------------
+# Benchmark -- sem godot-cpp
+#-----------------------------------------------------------------------
+
+if(PERLIN_BUILD_BENCHMARK)
+    add_executable(
+        perlin_benchmark
+        benchmark/benchmark_main.cpp
+    )
+
+    perlin_apply_common_options(perlin_benchmark)
+endif()
