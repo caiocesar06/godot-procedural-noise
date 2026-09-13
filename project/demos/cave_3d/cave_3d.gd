@@ -5,8 +5,7 @@ extends Node3D
 #     draw call para ~180 mil cubos;
 #   get_solid_voxels           -> os tesouros. Um SEGUNDO ruído, com outra
 #     semente, dá as posições do minério -- a lógica precisa de posições, não
-#     de matrizes de renderização ("um Perlin para o relevo, outro para os
-#     tesouros", Reunião 2);
+#     de matrizes de renderização ;
 #   get_fractal_noise_3d       -> consulta pontual: confere se cada candidato
 #     está no chão de uma caverna. São de dezenas a poucos milhares de
 #     consultas (medido); gerar outro lote de 262 mil voxels para isso seria
