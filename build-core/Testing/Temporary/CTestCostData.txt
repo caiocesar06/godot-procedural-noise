@@ -1,0 +1,2 @@
+nucleo_matematico 1 0.0918655
+---

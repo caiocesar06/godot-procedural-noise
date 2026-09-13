@@ -1,0 +1,92 @@
+Start testing: Sep 10 09:58 E. South America Standard Time
+----------------------------------------------------------
+1/1 Testing: nucleo_matematico
+1/1 Test: nucleo_matematico
+Command: "C:/Users/User/Documents/MEGA/Graduacao CEFET-MG/IC Perlin Noise/godot-perlin-noise/build-tests/perlin_tests.exe"
+Directory: C:/Users/User/Documents/MEGA/Graduacao CEFET-MG/IC Perlin Noise/godot-perlin-noise/build-tests
+"nucleo_matematico" start time: Sep 10 09:58 E. South America Standard Time
+Output:
+----------------------------------------------------------
+Testes do nucleo matematico (sem godot-cpp)
+
+[Tabela de permutacao]
+  ok    os 256 primeiros valores sao uma permutacao de 0..255
+  ok    a segunda metade duplica a primeira
+  ok    construtor padrao usa DEFAULT_SEED
+  ok    duas instancias padrao sao identicas (determinismo)
+  ok    sementes diferentes produzem tabelas diferentes
+
+[Funcoes de suavizacao]
+  ok    fade linear: f(0) = 0
+  ok    fade linear: f(1) = 1
+  ok    fade linear: f(1/2) = 1/2
+  ok    fade linear: monotona em [0,1]
+  ok    fade cubica: f(0) = 0
+  ok    fade cubica: f(1) = 1
+  ok    fade cubica: f(1/2) = 1/2
+  ok    fade cubica: monotona em [0,1]
+  ok    fade quintica: f(0) = 0
+  FALHA fade quintica: f(1) = 1   esperado 1, obtido 0   (test_core.cpp:177)
+  FALHA fade quintica: f(1/2) = 1/2   esperado 0.5, obtido 0.46875   (test_core.cpp:179)
+  FALHA fade quintica: monotona em [0,1]   (test_core.cpp:190)
+
+[Ruido nos pontos da grade]
+  ok    2D vale exatamente 0 nos vertices inteiros da grade
+  ok    3D vale exatamente 0 nos vertices inteiros da grade
+
+[Continuidade nas bordas de celula]
+  FALHA 2D nao salta ao cruzar a fronteira de celula (max 1.773820)   (test_core.cpp:232)
+  FALHA 3D nao salta ao cruzar a fronteira de celula (max 1.898784)   (test_core.cpp:246)
+
+[Determinismo do ruido]
+  ok    mesma semente produz exatamente os mesmos valores
+  ok    sementes diferentes produzem campos diferentes
+  ok    trocar fade_mode muda o valor calculado
+
+[Camada fractal]
+  ok    1 oitava em fBm devolve o ruido de base inalterado
+  ok    0 oitavas devolve 0, sem divisao por zero
+  ok    persistencia 0 colapsa para a primeira oitava, sem NaN
+  ok    Ridged leva 0 ao topo da crista
+  ok    Billow leva 0 ao fundo
+  ok    fBm nao altera a amostra
+
+[Vies do hash % 12 no gradiente 3D]
+  ok    o vies e exatamente 22 contra 21 ocorrencias
+  info  desequilibrio de 4.76% entre o gradiente mais e o menos frequente
+  info  Perlin (2002) usa h & 15 com a tabela estendida a 16 duplicando 4 arestas
+
+[Range medido contra o supremo teorico]
+  FALHA 2D respeita o supremo sqrt(2)/2 ~ 0,70711   (test_core.cpp:275)
+  FALHA 3D respeita o supremo sqrt(6)/2 ~ 1,22474   (test_core.cpp:280)
+  ok    2D chega perto de sqrt(2)/2: a cota e justa
+  FALHA 3D para em ~0,99 e nao alcanca sqrt(6)/2: a cota e frouxa   (test_core.cpp:295)
+
+  -- dados para o relatorio (400000 amostras, semente 42) --
+  2D, 1 oitava                 min  -1.36697  max   1.35100  media  -0.00001  desvio   0.30449
+  3D, 1 oitava                 min  -1.90966  max   1.91176  media   0.00021  desvio   0.35476
+  2D, 1 oitava                 ocupa [-47, 300] de [0, 255] = 136%
+  3D, 1 oitava                 ocupa [-116, 371] de [0, 255] = 191%
+  fBm 2D, 1 oitava(s)          min  -1.35132  max   1.26739  media   0.00129  desvio   0.30251
+  fBm 2D, 1 oitava(s)          ocupa [-45, 289] de [0, 255] = 131%
+  fBm 2D, 2 oitava(s)          min  -1.13787  max   1.16408  media   0.00103  desvio   0.22579
+  fBm 2D, 2 oitava(s)          ocupa [-18, 276] de [0, 255] = 115%
+  fBm 2D, 4 oitava(s)          min  -0.93508  max   1.13237  media   0.00085  desvio   0.18615
+  fBm 2D, 4 oitava(s)          ocupa [  8, 272] de [0, 255] = 103%
+  fBm 2D, 6 oitava(s)          min  -0.88235  max   1.07610  media   0.00077  desvio   0.17760
+  fBm 2D, 6 oitava(s)          ocupa [ 15, 265] de [0, 255] =  98%
+  fBm 2D, 16 oitava(s)         min  -0.86855  max   1.05830  media   0.00076  desvio   0.17485
+  fBm 2D, 16 oitava(s)         ocupa [ 17, 262] de [0, 255] =  96%
+
+----------------------------------------------
+27 de 35 verificacoes passaram
+8 FALHA(S)
+<end of output>
+Test time =   0.62 sec
+----------------------------------------------------------
+Test Failed.
+"nucleo_matematico" end time: Sep 10 09:58 E. South America Standard Time
+"nucleo_matematico" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 10 09:58 E. South America Standard Time

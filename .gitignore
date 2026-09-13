@@ -17,6 +17,8 @@ project/addons/perlin_noise/bin/*.lib
 
 .DS_Store
 Thumbs.db
+CLAUDE.md
+.claude/
 
 *~
 .*.swp
