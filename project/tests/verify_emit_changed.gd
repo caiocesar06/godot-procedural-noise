@@ -10,32 +10,32 @@ extends EditorScript
 # Arquivo > Executar (Ctrl+Shift+X). O resultado sai no painel Saída,
 # junto com os avisos esperados para entrada inválida.
 
-var _emissoes := 0
+var _emission_count := 0
 
 
-func _contar() -> void:
-	_emissoes += 1
+func _count_emission() -> void:
+	_emission_count += 1
 
 
-func _verificar(descricao: String, acao: Callable, esperado: int) -> bool:
-	_emissoes = 0
-	acao.call()
-	var ok := _emissoes == esperado
+func _check(description: String, action: Callable, expected: int) -> bool:
+	_emission_count = 0
+	action.call()
+	var passed := _emission_count == expected
 	print("%s  %s  (esperado %d, obtido %d)" % [
-		"ok   " if ok else "FALHA", descricao, esperado, _emissoes
+		"ok   " if passed else "FALHA", description, expected, _emission_count
 	])
-	return ok
+	return passed
 
 
 func _run() -> void:
 	var noise := PerlinNoise.new()
-	noise.changed.connect(_contar)
+	noise.changed.connect(_count_emission)
 
 	print("\n--- emissao do sinal changed ---")
 	print("valores padrao: octaves 4, persistence 0.5, lacunarity 2.0,")
 	print("fractal FBM, fade Quintic, seed 1337\n")
 
-	var casos := [
+	var test_cases := [
 		["octaves 4 -> 5", func(): noise.octaves = 5, 1],
 		["octaves 5 de novo", func(): noise.octaves = 5, 0],
 		["octaves 99 (vira 16, deve avisar)", func(): noise.octaves = 99, 1],
@@ -52,9 +52,9 @@ func _run() -> void:
 		["randomize_seed() emite uma vez so", func(): noise.randomize_seed(), 1],
 	]
 
-	var falhas := 0
-	for caso in casos:
-		if not _verificar(caso[0], caso[1], caso[2]):
-			falhas += 1
+	var failures := 0
+	for test_case in test_cases:
+		if not _check(test_case[0], test_case[1], test_case[2]):
+			failures += 1
 
-	print("\n%d de %d casos passaram" % [casos.size() - falhas, casos.size()])
+	print("\n%d de %d casos passaram" % [test_cases.size() - failures, test_cases.size()])
