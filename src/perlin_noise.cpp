@@ -52,17 +52,24 @@ namespace godot {
         );
     }
 
-    void PerlinNoise::set_seed(int64_t p_seed) {
+    // Chamado só por NoiseBase::set_seed, que já comparou e emite changed.
+    void PerlinNoise::apply_seed(int64_t p_seed) {
         _core.set_seed(p_seed);
     }
     int64_t PerlinNoise::get_seed() const { return _core.get_seed(); }
 
+    // Mesma regra dos setters da NoiseBase: aviso para entrada inválida,
+    // emissão só quando o valor guardado muda.
     void PerlinNoise::set_fade_mode(int32_t p_mode) {
         if (p_mode < 0 || p_mode > 2) {
             WARN_PRINT("PerlinNoise: 'fade_mode' invalido. Usando Quintic por padrao.");
             p_mode = FADE_QUINTIC;
         }
-        _core.set_fade_mode(static_cast<FadeMode>(p_mode));
+        const FadeMode mode = static_cast<FadeMode>(p_mode);
+        if (mode == _core.get_fade_mode())
+            return;
+        _core.set_fade_mode(mode);
+        emit_changed();
     }
     int32_t PerlinNoise::get_fade_mode() const { return static_cast<int32_t>(_core.get_fade_mode()); }
 
