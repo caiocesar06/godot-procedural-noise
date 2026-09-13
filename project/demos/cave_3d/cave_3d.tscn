@@ -1,0 +1,143 @@
+[gd_scene format=3 uid="uid://b71lv5ulfy15b"]
+
+[ext_resource type="Script" uid="uid://dcqgcmmmaye5m" path="res://demos/cave_3d/cave_3d.gd" id="1_cave"]
+[ext_resource type="Script" uid="uid://dlodq7ujf8dao" path="res://demos/cave_3d/fly_camera.gd" id="2_camera"]
+
+[sub_resource type="Environment" id="Environment_cave"]
+background_mode = 1
+background_color = Color(0.059, 0.067, 0.086, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.62, 0.66, 0.74, 1)
+ambient_light_energy = 0.5
+glow_enabled = true
+glow_hdr_threshold = 0.8
+
+[node name="Cave3D" type="Node3D" unique_id=1615337381]
+script = ExtResource("1_cave")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=470695292]
+environment = SubResource("Environment_cave")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1874273104]
+transform = Transform3D(0.866025, 0, 0.5, 0.383022, 0.642788, -0.663414, -0.321394, 0.766044, 0.55667, 32, 100, 32)
+light_energy = 0.8
+
+[node name="Rock" type="MultiMeshInstance3D" parent="." unique_id=1040726033]
+unique_name_in_owner = true
+
+[node name="Treasures" type="MultiMeshInstance3D" parent="." unique_id=1838326849]
+unique_name_in_owner = true
+
+[node name="FlyCamera" type="Camera3D" parent="." unique_id=541675100]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 80, 120)
+current = true
+script = ExtResource("2_camera")
+
+[node name="Hud" type="CanvasLayer" parent="." unique_id=1448556433]
+
+[node name="ControlsPanel" type="PanelContainer" parent="Hud" unique_id=2084514418]
+custom_minimum_size = Vector2(300, 0)
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 300.0
+grow_vertical = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Hud/ControlsPanel" unique_id=1590355634]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Controls" type="VBoxContainer" parent="Hud/ControlsPanel/Scroll" unique_id=1381392463]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="CaveHeader" type="Label" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=1343769803]
+layout_mode = 2
+text = "CAVERNA"
+
+[node name="ThresholdLabel" type="Label" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=1831020957]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Limiar da rocha:"
+
+[node name="ThresholdSlider" type="HSlider" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=818915427]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = -1.0
+max_value = 0.5
+step = 0.05
+value = -0.30000000000000004
+
+[node name="ScaleLabel" type="Label" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=4322700]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Escala:"
+
+[node name="ScaleSlider" type="HSlider" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=1542360523]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.02
+max_value = 0.1
+step = 0.005
+value = 0.05
+
+[node name="OctavesLabel" type="Label" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=1925131385]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Oitavas:"
+
+[node name="OctavesSlider" type="HSlider" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=330502303]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 8.0
+value = 4.0
+
+[node name="NewSeedButton" type="Button" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=1310827918]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Nova semente"
+
+[node name="TreasureHeader" type="Label" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=556788351]
+layout_mode = 2
+text = "TESOUROS"
+
+[node name="RarityLabel" type="Label" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=38751573]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Raridade do tesouro:"
+
+[node name="RaritySlider" type="HSlider" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=950609448]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 2.0
+max_value = 3.0
+step = 0.05
+value = 2.5
+
+[node name="ViewHeader" type="Label" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=1214762701]
+layout_mode = 2
+text = "VISUALIZAÇÃO"
+
+[node name="CutLabel" type="Label" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=74613060]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Corte transversal:"
+
+[node name="CutSlider" type="HSlider" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=1552501598]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 64.0
+value = 64.0
+
+[node name="StatsLabel" type="Label" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=432844211]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Gerando..."
+autowrap_mode = 3
+
+[node name="HelpLabel" type="Label" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=1487840307]
+layout_mode = 2
+text = "Botão direito + mouse: olhar · WASD: mover · Q/E: descer/subir · Shift: rápido · Roda: velocidade"
+autowrap_mode = 3

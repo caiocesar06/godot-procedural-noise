@@ -197,24 +197,44 @@ namespace godot {
         );
     }
 
+    // Todos os setters seguem a mesma regra, com duas decisões
+    // independentes: o AVISO depende de a entrada ser inválida; a EMISSÃO
+    // de changed depende de o valor guardado ter mudado. Atribuir o valor
+    // atual é uso normal (slider, Inspector, animação) e não emite nem
+    // avisa -- cada changed pode regenerar um mapa inteiro. A comparação
+    // exata em double é proposital: a pergunta é "mudou?", não "é
+    // parecido?".
+
     void NoiseBase::set_octaves(int32_t p_octaves) {
         if (p_octaves < 1 || p_octaves > 16)
             WARN_PRINT("NoiseBase: 'octaves' deve estar entre 1 e 16. Usando o limite mais proximo.");
-        _octaves = std::clamp(p_octaves, 1, 16);
+        const int32_t clamped = std::clamp(p_octaves, 1, 16);
+        if (clamped == _octaves)
+            return;
+        _octaves = clamped;
+        emit_changed();
     }
     int32_t NoiseBase::get_octaves() const { return _octaves; }
 
     void NoiseBase::set_persistence(double p_persistence) {
         if (p_persistence < 0.0 || p_persistence > 1.0)
             WARN_PRINT("NoiseBase: 'persistence' deve estar entre 0.0 e 1.0. Usando o limite mais proximo.");
-        _persistence = std::clamp(p_persistence, 0.0, 1.0);
+        const double clamped = std::clamp(p_persistence, 0.0, 1.0);
+        if (clamped == _persistence)
+            return;
+        _persistence = clamped;
+        emit_changed();
     }
     double NoiseBase::get_persistence() const { return _persistence; }
 
     void NoiseBase::set_lacunarity(double p_lacunarity) {
         if (p_lacunarity < 1.0 || p_lacunarity > 4.0)
             WARN_PRINT("NoiseBase: 'lacunarity' deve estar entre 1.0 e 4.0. Usando o limite mais proximo.");
-        _lacunarity = std::clamp(p_lacunarity, 1.0, 4.0);
+        const double clamped = std::clamp(p_lacunarity, 1.0, 4.0);
+        if (clamped == _lacunarity)
+            return;
+        _lacunarity = clamped;
+        emit_changed();
     }
     double NoiseBase::get_lacunarity() const { return _lacunarity; }
 
@@ -223,10 +243,26 @@ namespace godot {
             WARN_PRINT("NoiseBase: 'fractal_type' invalido. Usando FBM por padrao.");
             p_type = 0;
         }
-        _fractal_type = static_cast<FractalType>(p_type);
+        const FractalType type = static_cast<FractalType>(p_type);
+        if (type == _fractal_type)
+            return;
+        _fractal_type = type;
+        emit_changed();
     }
     int32_t NoiseBase::get_fractal_type() const { return static_cast<int32_t>(_fractal_type); }
 
+    // NVI: a comparação e a emissão vivem aqui, uma vez, para todo ruído.
+    // A subclasse só implementa apply_seed.
+    void NoiseBase::set_seed(int64_t p_seed) {
+        if (p_seed == get_seed())
+            return;
+        apply_seed(p_seed);
+        emit_changed();
+    }
+
+    // Não emite changed por conta própria: a emissão chega via set_seed.
+    // Emitir aqui também faria o sinal sair duas vezes -- e o mapa ser
+    // regenerado duas vezes.
     int64_t NoiseBase::randomize_seed() {
         std::random_device device;
         const int64_t new_seed = static_cast<int64_t>(
