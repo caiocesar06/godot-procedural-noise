@@ -1,5 +1,0 @@
-# ninja log v7
-8	2922	8096256955064281	CMakeFiles/perlin_benchmark.dir/benchmark/benchmark_main.cpp.obj	cb008f53d70dc76c
-2924	3125	8096256984252319	perlin_benchmark.exe	c3bb09573940aea4
-5	3564	8096256955064281	CMakeFiles/perlin_tests.dir/tests/test_core.cpp.obj	238f4ba5cab0381
-3564	3745	8096256990621377	perlin_tests.exe	9c808bce11adb03c

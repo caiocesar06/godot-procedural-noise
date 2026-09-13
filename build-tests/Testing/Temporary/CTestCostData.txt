@@ -1,3 +1,0 @@
-nucleo_matematico 3 0
----
-nucleo_matematico
