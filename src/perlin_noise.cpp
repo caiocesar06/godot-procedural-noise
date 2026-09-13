@@ -2,15 +2,27 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 
 namespace godot {
+
+    static_assert(
+        static_cast<int>(PerlinNoise::FADE_NONE)
+            == static_cast<int>(FadeMode::NONE),
+        "FadeType e FadeMode divergiram"
+    );
+    static_assert(
+        static_cast<int>(PerlinNoise::FADE_CUBIC)
+            == static_cast<int>(FadeMode::CUBIC),
+        "FadeType e FadeMode divergiram"
+    );
+    static_assert(
+        static_cast<int>(PerlinNoise::FADE_QUINTIC)
+            == static_cast<int>(FadeMode::QUINTIC),
+        "FadeType e FadeMode divergiram"
+    );
+
     void PerlinNoise::_bind_methods() {
-        ClassDB::bind_method(
-            D_METHOD("set_seed", "seed"),
-            &PerlinNoise::set_seed
-        );
-        ClassDB::bind_method(
-            D_METHOD("get_seed"),
-            &PerlinNoise::get_seed
-        );
+        // set_seed/get_seed são registrados em NoiseBase: a semente é
+        // contrato de todo ruído, não especificidade do Perlin.
+
         ClassDB::bind_method(
             D_METHOD("set_fade_mode", "mode"),
             &PerlinNoise::set_fade_mode
@@ -29,11 +41,10 @@ namespace godot {
             &PerlinNoise::get_noise_3d
         );
 
-        ADD_PROPERTY(
-            PropertyInfo(Variant::INT, "seed"),
-            "set_seed",
-            "get_seed"
-        );
+        BIND_ENUM_CONSTANT(FADE_NONE);
+        BIND_ENUM_CONSTANT(FADE_CUBIC);
+        BIND_ENUM_CONSTANT(FADE_QUINTIC);
+
         ADD_PROPERTY(
             PropertyInfo(Variant::INT, "fade_mode", PROPERTY_HINT_ENUM, "None,Cubic,Quintic"),
             "set_fade_mode",
@@ -48,8 +59,8 @@ namespace godot {
 
     void PerlinNoise::set_fade_mode(int32_t p_mode) {
         if (p_mode < 0 || p_mode > 2) {
-            WARN_PRINT("PerlinNoise: 'fade_mode' inválido. Usando Quintic por padrão.");
-            p_mode = 2;
+            WARN_PRINT("PerlinNoise: 'fade_mode' invalido. Usando Quintic por padrao.");
+            p_mode = FADE_QUINTIC;
         }
         _core.set_fade_mode(static_cast<FadeMode>(p_mode));
     }
