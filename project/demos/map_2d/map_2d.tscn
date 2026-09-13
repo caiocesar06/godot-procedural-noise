@@ -1,0 +1,209 @@
+[gd_scene format=3 uid="uid://dbgsuus2ncrs2"]
+
+[ext_resource type="Script" uid="uid://dc7tmwq1jsfja" path="res://demos/map_2d/map_2d.gd" id="1_gj1e1"]
+[ext_resource type="Shader" uid="uid://cyu7a0t8e1ixl" path="res://demos/map_2d/map_2d.gdshader" id="2_5tix1"]
+[ext_resource type="Texture2D" uid="uid://biu8a0o1ca2vx" path="res://icon.svg" id="3_5tix1"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_g4v7s"]
+shader = ExtResource("2_5tix1")
+shader_parameter/mean = 0.0
+shader_parameter/std_dev = 1.0
+shader_parameter/height_exaggeration = 40.0
+shader_parameter/decode_8bit = false
+shader_parameter/shading_enabled = false
+shader_parameter/thresholds = Vector4(0, 0.2, 1, 1.6)
+shader_parameter/water_color = Color(0.14, 0.33, 0.6, 1)
+shader_parameter/sand_color = Color(0.87, 0.8, 0.58, 1)
+shader_parameter/grass_color = Color(0.27, 0.52, 0.24, 1)
+shader_parameter/rock_color = Color(0.46, 0.41, 0.37, 1)
+shader_parameter/snow_color = Color(0.95, 0.96, 0.98, 1)
+shader_parameter/light_direction = Vector3(-1, -1, -1)
+
+[node name="Map2D" type="HBoxContainer" unique_id=710635099]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gj1e1")
+
+[node name="ControlsPanel" type="PanelContainer" parent="." unique_id=1479418420]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="ControlsPanel" unique_id=1493584189]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Controls" type="VBoxContainer" parent="ControlsPanel/Scroll" unique_id=1535884813]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="NoiseHeader" type="Label" parent="ControlsPanel/Scroll/Controls" unique_id=769930438]
+unique_name_in_owner = true
+layout_mode = 2
+text = "RUÍDO"
+
+[node name="OctavesLabel" type="Label" parent="ControlsPanel/Scroll/Controls" unique_id=1418123377]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Oitavas:"
+
+[node name="OctavesSlider" type="HSlider" parent="ControlsPanel/Scroll/Controls" unique_id=826128059]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 16.0
+value = 6.0
+
+[node name="PersistenceLabel" type="Label" parent="ControlsPanel/Scroll/Controls" unique_id=128686939]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Persistência:"
+
+[node name="PersistenceSlider" type="HSlider" parent="ControlsPanel/Scroll/Controls" unique_id=402967021]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.05
+value = 0.5
+
+[node name="LacunarityLabel" type="Label" parent="ControlsPanel/Scroll/Controls" unique_id=1266301633]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Lacunaridade:"
+
+[node name="LacunaritySlider" type="HSlider" parent="ControlsPanel/Scroll/Controls" unique_id=714141189]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.25
+max_value = 3.0
+step = 0.05
+value = 2.0
+
+[node name="ScaleLabel" type="Label" parent="ControlsPanel/Scroll/Controls" unique_id=2117346726]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Escala:"
+
+[node name="ScaleSlider" type="HSlider" parent="ControlsPanel/Scroll/Controls" unique_id=1236364006]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.002
+max_value = 0.05
+step = 0.001
+value = 0.01
+
+[node name="FractalTypeLabel" type="Label" parent="ControlsPanel/Scroll/Controls" unique_id=1815273660]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Tipo de Fractal:"
+
+[node name="FractalTypeOption" type="OptionButton" parent="ControlsPanel/Scroll/Controls" unique_id=1371090985]
+unique_name_in_owner = true
+layout_mode = 2
+selected = 0
+item_count = 3
+popup/item_0/text = "FBM"
+popup/item_0/id = 0
+popup/item_1/text = "Ridged"
+popup/item_1/id = 1
+popup/item_2/text = "Billow"
+popup/item_2/id = 2
+
+[node name="NewSeedButton" type="Button" parent="ControlsPanel/Scroll/Controls" unique_id=326172441]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Nova Semente"
+
+[node name="ThresholdLabel" type="Label" parent="ControlsPanel/Scroll/Controls" unique_id=231041876]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Limiares (em desvios padrão)"
+
+[node name="WaterLabel" type="Label" parent="ControlsPanel/Scroll/Controls" unique_id=1701696759]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Água:"
+
+[node name="WaterThresholdSlider" type="HSlider" parent="ControlsPanel/Scroll/Controls" unique_id=1918847902]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = -3.0
+max_value = 3.0
+step = 0.05
+
+[node name="SandLabel" type="Label" parent="ControlsPanel/Scroll/Controls" unique_id=1446715982]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Areia:"
+
+[node name="SandThresholdSlider" type="HSlider" parent="ControlsPanel/Scroll/Controls" unique_id=1083778430]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = -3.0
+max_value = 3.0
+step = 0.05
+value = 0.20000000000000018
+
+[node name="GrassLabel" type="Label" parent="ControlsPanel/Scroll/Controls" unique_id=746467993]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Floresta:"
+
+[node name="GrassThresholdSlider" type="HSlider" parent="ControlsPanel/Scroll/Controls" unique_id=1444851657]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = -3.0
+max_value = 3.0
+step = 0.05
+value = 1.0
+
+[node name="RockLabel" type="Label" parent="ControlsPanel/Scroll/Controls" unique_id=1356867808]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Montanha:"
+
+[node name="RockThresholdSlider" type="HSlider" parent="ControlsPanel/Scroll/Controls" unique_id=1970854800]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = -3.0
+max_value = 3.0
+step = 0.05
+value = 1.5999999999999996
+
+[node name="ViewHeader" type="Label" parent="ControlsPanel/Scroll/Controls" unique_id=1339372903]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Visualização"
+
+[node name="NormalizeToggle" type="CheckButton" parent="ControlsPanel/Scroll/Controls" unique_id=1822930176]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "Normalizar pela fórmula (σ_F)"
+
+[node name="FloatToggle" type="CheckButton" parent="ControlsPanel/Scroll/Controls" unique_id=1029638462]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "Precisão float (desligado: 8 bits)"
+
+[node name="ShadingToggle" type="CheckButton" parent="ControlsPanel/Scroll/Controls" unique_id=630610413]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Relevo sombreado"
+
+[node name="Map" type="TextureRect" parent="." unique_id=2063533386]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_g4v7s")
+layout_mode = 2
+size_flags_horizontal = 3
+texture = ExtResource("3_5tix1")
+expand_mode = 1
+stretch_mode = 5
