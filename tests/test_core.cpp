@@ -6,7 +6,7 @@
 //
 // Compilar e rodar:
 //   cmake -B build-tests -G Ninja -DPERLIN_BUILD_EXTENSION=OFF -DPERLIN_BUILD_TESTS=ON
-//   cmake --build build-tests && ctest --test-dir build-tests --output-on-failure
+//   cmake --build build-tests; ctest --test-dir build-tests --output-on-failure
 
 #include "fractal.hpp"
 #include "perlin_core.hpp"
