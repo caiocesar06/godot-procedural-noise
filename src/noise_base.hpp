@@ -28,6 +28,11 @@ namespace godot {
     protected:
         static void _bind_methods();
 
+        // Aplica a semente ao estado interno da subclasse. Chamado apenas
+        // por set_seed, depois de confirmado que o valor mudou -- quem
+        // implementa não compara nem emite changed.
+        virtual void apply_seed(int64_t p_seed) = 0;
+
     public:
         NoiseBase() = default;
         virtual ~NoiseBase() = 0;
@@ -50,8 +55,14 @@ namespace godot {
         // responsabilidade desta classe -- é o que permite a um novo
         // algoritmo (Simplex, Worley) herdar fBm/Ridged/Billow sem
         // reimplementar nada.
+        //
+        // A semente segue o idioma NVI (Non-Virtual Interface; Sutter,
+        // "Virtuality", 2001): set_seed é público e NÃO virtual, compara
+        // com o valor atual e emite changed; a subclasse só implementa
+        // apply_seed. Assim a emissão fica garantida para todo ruído
+        // futuro, sem depender de cada subclasse lembrar de emitir.
 
-        virtual void set_seed(int64_t p_seed) = 0;
+        void set_seed(int64_t p_seed);
         virtual int64_t get_seed() const = 0;
 
         virtual double get_noise_2d(

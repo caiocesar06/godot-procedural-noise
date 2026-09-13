@@ -25,11 +25,12 @@ namespace godot {
     protected:
         static void _bind_methods();
 
+        void apply_seed(int64_t p_seed) override;
+
     public:
         PerlinNoise() = default;
         ~PerlinNoise() = default;
 
-        void set_seed(int64_t p_seed) override;
         int64_t get_seed() const override;
 
         void set_fade_mode(int32_t p_mode);
