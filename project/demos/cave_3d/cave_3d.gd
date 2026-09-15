@@ -90,6 +90,11 @@ func _ready() -> void:
 	rock_noise.changed.connect(_schedule_regenerate)
 
 	octaves_slider.value_changed.connect(func(value: float) -> void: rock_noise.octaves = int(value))
+
+	# O teclado é da câmera. Um botão clicado fica com o foco, e o Espaço
+	# (parte de ui_accept) o aciona: subir com a câmera geraria outra caverna.
+	# Sem foco, o botão continua funcionando com o mouse.
+	new_seed_button.focus_mode = Control.FOCUS_NONE
 	new_seed_button.pressed.connect(_on_new_seed)
 
 	# Limiar, escala e raridade não são propriedades do ruído.
