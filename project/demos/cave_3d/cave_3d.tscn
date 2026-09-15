@@ -139,5 +139,5 @@ autowrap_mode = 3
 
 [node name="HelpLabel" type="Label" parent="Hud/ControlsPanel/Scroll/Controls" unique_id=1487840307]
 layout_mode = 2
-text = "Botão direito + mouse: olhar · WASD: mover · Q/E: descer/subir · Shift: rápido · Roda: velocidade"
+text = "Botão direito + mouse: olhar · WASD: mover · Ctrl/Espaço: descer/subir · Shift: rápido · Roda: velocidade"
 autowrap_mode = 3

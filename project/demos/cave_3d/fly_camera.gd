@@ -3,7 +3,7 @@ extends Camera3D
 # Câmera de voo livre.
 #   botão direito (segurar) -> olhar com o mouse
 #   W A S D                 -> mover
-#   Q / E                   -> descer / subir
+#   CTRL / SPACE                   -> descer / subir
 #   Shift                   -> acelerar
 #   roda do mouse           -> ajustar a velocidade
 # Com o botão direito solto, o mouse fica livre para a interface.
@@ -65,9 +65,9 @@ func _process(delta: float) -> void:
 		direction -= basis.x
 	if Input.is_physical_key_pressed(KEY_D):
 		direction += basis.x
-	if Input.is_physical_key_pressed(KEY_E):
+	if Input.is_physical_key_pressed(KEY_SPACE):
 		direction += Vector3.UP
-	if Input.is_physical_key_pressed(KEY_Q):
+	if Input.is_physical_key_pressed(KEY_CTRL):
 		direction -= Vector3.UP
 
 	if direction == Vector3.ZERO:
