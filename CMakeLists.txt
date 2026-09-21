@@ -241,24 +241,29 @@ endif()
 if(PERLIN_BUILD_TESTS)
     enable_testing()
 
-    add_executable(
-        perlin_tests
-        tests/test_core.cpp
-    )
+    # tests/ vive na branch dev/tests-benchmark. O alvo so entra quando a
+    # fonte estiver presente, para -DPERLIN_BUILD_TESTS=ON nao quebrar aqui
+    # nem nas branches de demo, que tem outros testes.
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_core.cpp)
+        add_executable(
+            perlin_tests
+            tests/test_core.cpp
+        )
 
-    perlin_apply_common_options(perlin_tests)
+        perlin_apply_common_options(perlin_tests)
 
-    add_test(
-        NAME nucleo_matematico
-        COMMAND perlin_tests
-    )
+        add_test(
+            NAME nucleo_matematico
+            COMMAND perlin_tests
+        )
+    endif()
 endif()
 
 #-----------------------------------------------------------------------
 # Benchmark -- sem godot-cpp
 #-----------------------------------------------------------------------
 
-if(PERLIN_BUILD_BENCHMARK)
+if(PERLIN_BUILD_BENCHMARK AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/benchmark/benchmark_main.cpp)
     add_executable(
         perlin_benchmark
         benchmark/benchmark_main.cpp
