@@ -2,10 +2,10 @@ name: Build Perlin Noise Addon
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "dev/tests-benchmark" ]
     tags: [ "v*" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "dev/tests-benchmark" ]
 
 permissions:
   contents: write
