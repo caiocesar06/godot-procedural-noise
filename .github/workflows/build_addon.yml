@@ -11,40 +11,8 @@ permissions:
   contents: write
 
 jobs:
-  # O núcleo matemático não depende de godot-cpp, então este job roda sem
-  # o submódulo e termina em segundos. Se ele quebrar, não vale gastar os
-  # minutos de compilação da extensão.
-  test:
-    name: Testes do núcleo
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout do Repositório
-      uses: actions/checkout@v4
-
-    - name: Instalar dependências
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake ninja-build
-
-    - name: Configurar (sem godot-cpp)
-      run: >-
-        cmake -B build-core -G Ninja
-        -DCMAKE_BUILD_TYPE=Release
-        -DPERLIN_BUILD_EXTENSION=OFF
-
-    - name: Compilar
-      run: cmake --build build-core
-
-    - name: Rodar testes
-      run: ctest --test-dir build-core --output-on-failure
-
-    - name: Benchmark (informativo)
-      run: ./build-core/perlin_benchmark
-
   build:
     name: ${{ matrix.name }}
-    needs: test
 
     strategy:
       fail-fast: false

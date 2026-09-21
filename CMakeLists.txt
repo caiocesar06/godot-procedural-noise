@@ -30,6 +30,9 @@ option(
     OFF
 )
 
+# tests/ e benchmark/ NAO estao nesta branch: eles vivem na branch
+# dev/tests-benchmark, para a master ficar so com o addon. Por isso os dois
+# option() abaixo tem padrao OFF aqui; naquela branch, ON.
 # O nucleo matematico (perlin_core.hpp, permutation_table.hpp,
 # fractal.hpp) nao depende de godot-cpp. Desligar PERLIN_BUILD_EXTENSION
 # permite compilar testes e benchmark sem sequer configurar o submodulo,
@@ -43,13 +46,13 @@ option(
 option(
     PERLIN_BUILD_TESTS
     "Compila os testes do nucleo matematico"
-    ON
+    OFF
 )
 
 option(
     PERLIN_BUILD_BENCHMARK
     "Compila o harness de benchmark"
-    ON
+    OFF
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

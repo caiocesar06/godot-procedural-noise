@@ -110,7 +110,7 @@ Geração em lote (tudo em C++, paralelizado):
 
 O Perlin gradiente **não** produz valores em toda a faixa `[-1, 1]`, e 2D e
 3D não têm o mesmo alcance. Medido sobre 400 mil amostras
-(`tests/test_core.cpp`):
+(`tests/test_core.cpp`, na branch `dev/tests-benchmark`):
 
 | Configuração | Mínimo | Máximo | Ocupação de `[0, 255]` |
 |---|---|---|---|
@@ -151,33 +151,12 @@ Se você clonou sem `--recursive`:
 git submodule update --init --recursive
 ```
 
-### Testes
+### Testes e benchmark
 
-O núcleo matemático (`perlin_core.hpp`, `permutation_table.hpp`,
-`fractal.hpp`) não inclui `godot-cpp`. Isso permite verificá-lo sem a engine
-e sem sequer configurar o submódulo:
-
-```bash
-cmake -B build-core -G Ninja -DPERLIN_BUILD_EXTENSION=OFF
-cmake --build build-core
-ctest --test-dir build-core --output-on-failure
-```
-
-Os testes cobrem a validade da tabela de permutação, determinismo por
-semente, as três funções de suavização, o valor nulo nos vértices da grade,
-continuidade nas fronteiras de célula, a camada fractal e a faixa de valores
-medida contra a cota teórica.
-
-### Benchmark
-
-```bash
-./build-core/perlin_benchmark          # tabela legível
-./build-core/perlin_benchmark --csv    # CSV
-```
-
-Ele imprime junto a configuração de build usada (compilador, OpenMP,
-fast-math), porque medições com e sem `-ffast-math` não são comparáveis
-entre si.
+Os testes do núcleo (`tests/test_core.cpp`) e o harness de benchmark
+(`benchmark/benchmark_main.cpp`) ficam na branch `dev/tests-benchmark`, para
+manter a `master` só com o addon. Lá eles são compilados com
+`-DPERLIN_BUILD_TESTS=ON -DPERLIN_BUILD_BENCHMARK=ON` e rodados com `ctest`.
 
 ### Build de desempenho vs. build de precisão
 
@@ -197,8 +176,8 @@ recomendação é mantê-lo desligado, que é o padrão.
 | Opção | Padrão | Efeito |
 |---|---|---|
 | `PERLIN_BUILD_EXTENSION` | `ON` | compila a GDExtension (exige `godot-cpp`) |
-| `PERLIN_BUILD_TESTS` | `ON` | compila os testes do núcleo |
-| `PERLIN_BUILD_BENCHMARK` | `ON` | compila o harness de benchmark |
+| `PERLIN_BUILD_TESTS` | `OFF` | compila os testes do núcleo (branch `dev/tests-benchmark`) |
+| `PERLIN_BUILD_BENCHMARK` | `OFF` | compila o benchmark (branch `dev/tests-benchmark`) |
 | `PERLIN_ENABLE_FAST_MATH` | `OFF` | ativa `-ffast-math` em `Release` |
 
 ---
