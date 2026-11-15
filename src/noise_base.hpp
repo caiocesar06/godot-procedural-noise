@@ -23,6 +23,7 @@ namespace godot {
         int32_t _octaves = 4;
         double _persistence = 0.5;
         double _lacunarity = 2.0;
+        double _weighted_strength = 0.0;
         FractalType _fractal_type = FractalType::FRACTAL_FBM;
 
     protected:
@@ -42,6 +43,9 @@ namespace godot {
 
         void set_lacunarity(double p_lacunarity);
         double get_lacunarity() const;
+
+        void set_weighted_strength(double p_strength);
+        double get_weighted_strength() const;
 
         void set_fractal_type(int32_t p_type);
         int32_t get_fractal_type() const;

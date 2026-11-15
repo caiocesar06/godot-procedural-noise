@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 
 // Camada de composição fractal, agnóstica de engine.
@@ -28,25 +29,34 @@ namespace godot {
     // então o resultado herda o range do ruído de base -- que NÃO é
     // necessariamente [-1, 1]. Ver nota em perlin_core.hpp sobre o supremo
     // sqrt(N)/2 e a concentração por TLC.
+    // Quando weighted_strength > 0, a amplitude da próxima oitava é
+    // modulada pelo sinal da oitava atual (multifractal, modelo
+    // FastNoiseLite): vales ficam mais lisos e picos concentram detalhes.
     template <typename F>
     double calculate_fractal(
         FractalKind kind,
         int octaves,
         double persistence,
         double lacunarity,
+        double weighted_strength,
         F evaluate_noise
     ) {
         double total = 0.0;
         double amplitude = 1.0;
         double frequency = 1.0;
         double max_value = 0.0;
+        const double weight_k = std::clamp(weighted_strength, 0.0, 1.0);
 
         for (int i = 0; i < octaves; ++i) {
-            total += apply_fractal_shape(kind, evaluate_noise(frequency))
-                * amplitude;
+            const double signal = apply_fractal_shape(kind, evaluate_noise(frequency));
+            total += signal * amplitude;
 
             max_value += amplitude;
-            amplitude *= persistence;
+
+            const double weight = std::clamp((signal + 1.0) * 0.5, 0.0, 1.0);
+            const double factor = 1.0 + weight_k * (weight - 1.0);
+
+            amplitude *= factor * persistence;
             frequency *= lacunarity;
         }
 
