@@ -1,7 +1,7 @@
 #pragma once
 
-#include "noise_base.hpp"
-#include "perlin_core.hpp"
+#include "common/noise_base.hpp"
+#include "noises/perlin/perlin_core.hpp"
 
 namespace godot {
     class PerlinNoise final : public NoiseBase {

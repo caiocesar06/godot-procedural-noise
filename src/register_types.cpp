@@ -2,8 +2,8 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/godot.hpp>
 
-#include "noise_base.hpp"
-#include "perlin_noise.hpp"
+#include "common/noise_base.hpp"
+#include "noises/perlin/perlin_noise.hpp"
 
 using namespace godot;
 

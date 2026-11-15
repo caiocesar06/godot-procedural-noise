@@ -1,4 +1,4 @@
-#include "noise_base.hpp"
+#include "common/noise_base.hpp"
 
 #include <godot_cpp/classes/mesh.hpp>
 #include <godot_cpp/variant/packed_int32_array.hpp>

@@ -1,4 +1,4 @@
-#include "perlin_noise.hpp"
+#include "noises/perlin/perlin_noise.hpp"
 #include <godot_cpp/variant/utility_functions.hpp>
 
 namespace godot {

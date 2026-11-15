@@ -81,6 +81,8 @@ function(perlin_apply_common_options TARGET_NAME)
         ${TARGET_NAME}
         PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/common"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/noises/perlin"
     )
 
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -127,8 +129,8 @@ if(PERLIN_BUILD_EXTENSION)
         perlin_noise
         SHARED
         src/register_types.cpp
-        src/noise_base.cpp
-        src/perlin_noise.cpp
+        src/common/noise_base.cpp
+        src/noises/perlin/perlin_noise.cpp
     )
 
     perlin_apply_common_options(perlin_noise)
