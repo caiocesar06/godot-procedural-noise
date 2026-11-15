@@ -60,6 +60,14 @@ namespace godot {
             &NoiseBase::get_lacunarity
         );
         ClassDB::bind_method(
+            D_METHOD("set_weighted_strength", "weighted_strength"),
+            &NoiseBase::set_weighted_strength
+        );
+        ClassDB::bind_method(
+            D_METHOD("get_weighted_strength"),
+            &NoiseBase::get_weighted_strength
+        );
+        ClassDB::bind_method(
             D_METHOD("set_fractal_type", "type"),
             &NoiseBase::set_fractal_type
         );
@@ -191,6 +199,11 @@ namespace godot {
             "get_lacunarity"
         );
         ADD_PROPERTY(
+            PropertyInfo(Variant::FLOAT, "weighted_strength", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"),
+            "set_weighted_strength",
+            "get_weighted_strength"
+        );
+        ADD_PROPERTY(
             PropertyInfo(Variant::INT, "fractal_type", PROPERTY_HINT_ENUM, "FBM,Ridged,Billow"),
             "set_fractal_type",
             "get_fractal_type"
@@ -238,6 +251,17 @@ namespace godot {
     }
     double NoiseBase::get_lacunarity() const { return _lacunarity; }
 
+    void NoiseBase::set_weighted_strength(double p_strength) {
+        if (p_strength < 0.0 || p_strength > 1.0)
+            WARN_PRINT("NoiseBase: 'weighted_strength' deve estar entre 0.0 e 1.0. Usando o limite mais proximo.");
+        const double clamped = std::clamp(p_strength, 0.0, 1.0);
+        if (clamped == _weighted_strength)
+            return;
+        _weighted_strength = clamped;
+        emit_changed();
+    }
+    double NoiseBase::get_weighted_strength() const { return _weighted_strength; }
+
     void NoiseBase::set_fractal_type(int32_t p_type) {
         if (p_type < 0 || p_type > 2) {
             WARN_PRINT("NoiseBase: 'fractal_type' invalido. Usando FBM por padrao.");
@@ -278,6 +302,7 @@ namespace godot {
             _octaves,
             _persistence,
             _lacunarity,
+            _weighted_strength,
             [this, x, y](double freq) {
                 return get_noise_2d(x * freq, y * freq);
             }
@@ -290,6 +315,7 @@ namespace godot {
             _octaves,
             _persistence,
             _lacunarity,
+            _weighted_strength,
             [this, x, y, z](double freq) {
                 return get_noise_3d(x * freq, y * freq, z * freq);
             }
