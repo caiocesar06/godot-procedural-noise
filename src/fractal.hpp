@@ -3,12 +3,6 @@
 #include <cmath>
 
 // Camada de composição fractal, agnóstica de engine.
-//
-// Vive fora de NoiseBase de propósito: a composição de oitavas é
-// matemática pura e precisa ser exercitável pelos testes e pelo
-// benchmark sem carregar o godot-cpp. NoiseBase apenas delega para cá.
-//
-// Ver perlin_core.hpp para a mesma decisão aplicada ao ruído de base.
 
 namespace godot {
 
@@ -19,13 +13,13 @@ namespace godot {
 
     inline double apply_fractal_shape(FractalKind kind, double v) {
         switch (kind) {
-        case FractalKind::RIDGED:
-            return 1.0 - (2.0 * std::abs(v));
-        case FractalKind::BILLOW:
-            return (2.0 * std::abs(v)) - 1.0;
-        case FractalKind::FBM:
-        default:
-            return v;
+            case FractalKind::RIDGED:
+                return 1.0 - (2.0 * std::abs(v));
+            case FractalKind::BILLOW:
+                return (2.0 * std::abs(v)) - 1.0;
+            case FractalKind::FBM:
+            default:
+                return v;
         }
     }
 

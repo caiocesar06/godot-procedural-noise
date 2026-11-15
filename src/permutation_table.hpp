@@ -9,16 +9,6 @@ namespace godot {
 
     class PermutationTable {
         public:
-            // Semente padrão determinística.
-            //
-            // Antes daqui o construtor sem argumento chamava
-            // std::random_device, o que tornava PerlinNoise.new() não
-            // reprodutível: cada execução do jogo gerava um terreno
-            // diferente sem que o usuário tivesse pedido isso. As figuras
-            // do relatório dependem de semente fixa, e o FastNoiseLite --
-            // a referência de comparação da IC -- também adota um valor
-            // fixo (1337). Aleatoriedade agora é explícita, via
-            // PerlinNoise.randomize_seed().
             static constexpr int64_t DEFAULT_SEED = 1337;
 
         private:
@@ -60,7 +50,7 @@ namespace godot {
 
             int64_t get_seed() const { return _seed; }
 
-            inline int hash(int x) const {
+            inline int64_t hash(int64_t x) const {
                 return _table[static_cast<std::size_t>(x) & 511u];
             }
     };
