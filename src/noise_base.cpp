@@ -424,15 +424,36 @@ namespace godot {
             Array(),
             "grid_size deve ser >= 2."
         );
+        // Evita overflow em grid_size * grid_size antes do cálculo exato do pico.
         ERR_FAIL_COND_V_MSG(
-            grid_size > 4096,
+            grid_size > MAX_BUFFER_BYTES / grid_size,
             Array(),
-            "grid_size acima de 4096 excede o orcamento de memoria."
+            "Malha de terreno excede 512MB de RAM."
         );
 
         const int64_t side = grid_size;
         const int64_t vertex_count = side * side;
         const int64_t quad_count = (side - 1) * (side - 1);
+
+        // Pico de memória em duas fases: `heights` é liberado antes da
+        // alocação de `indices`, reduzindo o pico de ~64 B para ~56 B/vértice.
+        constexpr int64_t PHASE1_BYTES_PER_VERTEX = static_cast<int64_t>(
+            sizeof(double) + 2 * sizeof(Vector3) + sizeof(Vector2)
+        );
+        constexpr int64_t PHASE2_BYTES_PER_VERTEX = static_cast<int64_t>(
+            2 * sizeof(Vector3) + sizeof(Vector2)
+        );
+        constexpr int64_t BYTES_PER_QUAD = static_cast<int64_t>(
+            6 * sizeof(int32_t)
+        );
+        const int64_t phase1_bytes = vertex_count * PHASE1_BYTES_PER_VERTEX;
+        const int64_t phase2_bytes =
+            vertex_count * PHASE2_BYTES_PER_VERTEX + quad_count * BYTES_PER_QUAD;
+        ERR_FAIL_COND_V_MSG(
+            std::max(phase1_bytes, phase2_bytes) > MAX_BUFFER_BYTES,
+            Array(),
+            "Malha de terreno excede 512MB de RAM."
+        );
 
         std::vector<double> heights(static_cast<size_t>(vertex_count));
 
@@ -505,6 +526,10 @@ namespace godot {
                 );
             }
         }
+
+        // Libera `heights` antes de alocar `indices` para evitar sobreposição
+        // dos dois buffers no pico de memória.
+        std::vector<double>().swap(heights);
 
         PackedInt32Array indices;
         indices.resize(quad_count * 6);
@@ -580,6 +605,15 @@ namespace godot {
             if (density[static_cast<size_t>(i)] > limit) ++solid_count;
         }
 
+        const int64_t density_bytes = total * static_cast<int64_t>(sizeof(float));
+        const int64_t positions_bytes =
+            solid_count * static_cast<int64_t>(sizeof(Vector3));
+        ERR_FAIL_COND_V_MSG(
+            density_bytes + positions_bytes > MAX_BUFFER_BYTES,
+            PackedVector3Array(),
+            "Voxels solidos excedem 512MB de RAM."
+        );
+
         PackedVector3Array positions;
         positions.resize(solid_count);
         Vector3* position_ptr = positions.ptrw();
@@ -615,6 +649,15 @@ namespace godot {
         );
 
         const int64_t count = positions.size();
+
+        constexpr int64_t BYTES_PER_TRANSFORM = static_cast<int64_t>(
+            sizeof(Vector3) + 12 * sizeof(float)
+        );
+        ERR_FAIL_COND_V_MSG(
+            count > MAX_BUFFER_BYTES / BYTES_PER_TRANSFORM,
+            PackedFloat32Array(),
+            "Transformacoes de voxels solidos excedem 512MB de RAM."
+        );
 
         // MultiMesh em TRANSFORM_3D consome 12 floats por instância: a
         // matriz 3x4 em ordem de linha, cada linha terminando na

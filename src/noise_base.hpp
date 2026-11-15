@@ -28,9 +28,6 @@ namespace godot {
     protected:
         static void _bind_methods();
 
-        // Aplica a semente ao estado interno da subclasse. Chamado apenas
-        // por set_seed, depois de confirmado que o valor mudou -- quem
-        // implementa não compara nem emite changed.
         virtual void apply_seed(int64_t p_seed) = 0;
 
     public:
@@ -78,8 +75,6 @@ namespace godot {
 
         // -------------------------------------------------- //
 
-        // Sorteia uma semente nova e a devolve. Aleatoriedade é
-        // explícita: o construtor padrão é determinístico.
         int64_t randomize_seed();
 
         double get_fractal_noise_2d(
@@ -95,8 +90,7 @@ namespace godot {
 
         // -------------------------------------------------- //
         // Geração em lote. Toda iteração pesada de pixel, vértice ou
-        // voxel vive aqui: uma travessia de fronteira GDScript->C++ por
-        // chamada, em vez de uma por elemento.
+        // voxel vive aqui
 
         PackedByteArray get_fbm_image_data(
             int64_t width,
@@ -136,7 +130,7 @@ namespace godot {
         ) const;
 
         // Centros dos voxels cujo ruído supera o limiar. Substitui o laço
-        // de grid_size^3 iterações que era feito em GDScript.
+        // de grid_size³ iterações que era feito em GDScript.
         PackedVector3Array get_solid_voxels(
             int64_t width,
             int64_t height,
