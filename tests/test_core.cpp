@@ -172,19 +172,19 @@ static void test_fade() {
         PerlinCore core(42);
         core.set_fade_mode(modes[m]);
 
-        CHECK_NEAR(core.fade(0.0f), 0.0, 1e-6,
+        CHECK_NEAR(core.fade(0.0), 0.0, 1e-15,
             std::string("fade ") + names[m] + ": f(0) = 0");
-        CHECK_NEAR(core.fade(1.0f), 1.0, 1e-6,
+        CHECK_NEAR(core.fade(1.0), 1.0, 1e-15,
             std::string("fade ") + names[m] + ": f(1) = 1");
-        CHECK_NEAR(core.fade(0.5f), 0.5, 1e-6,
+        CHECK_NEAR(core.fade(0.5), 0.5, 1e-15,
             std::string("fade ") + names[m] + ": f(1/2) = 1/2");
 
         bool monotonic = true;
-        float previous = core.fade(0.0f);
+        double previous = core.fade(0.0);
         for (int i = 1; i <= 200; ++i) {
-            const float t = static_cast<float>(i) / 200.0f;
-            const float current = core.fade(t);
-            if (current < previous - 1e-6f) monotonic = false;
+            const double t = static_cast<double>(i) / 200.0;
+            const double current = core.fade(t);
+            if (current < previous - 1e-15) monotonic = false;
             previous = current;
         }
         CHECK(monotonic, std::string("fade ") + names[m] + ": monotona em [0,1]");
@@ -305,18 +305,19 @@ static void test_range_and_distribution() {
     report_gray_usage("2D, 1 oitava", s2);
     report_gray_usage("3D, 1 oitava", s3);
 
-    // Concentracao por TLC: quanto mais oitavas, mais estreita a
-    // distribuicao em torno de zero.
+    // Estreitamento da distribuicao ao somar oitavas (NAO e TLC: com
+    // persistencia 0,5 a primeira oitava domina a variancia e a condicao
+    // de Lindeberg falha).
     for (int octaves : { 1, 2, 4, 6, 16 }) {
         std::vector<double> fbm;
-        fbm.reserve(60000);
+        fbm.reserve(SAMPLES);
         std::mt19937_64 local(999);
         std::uniform_real_distribution<double> c(-500.0, 500.0);
-        for (int i = 0; i < 60000; ++i) {
+        for (int i = 0; i < SAMPLES; ++i) {
             const double x = c(local);
             const double y = c(local);
             fbm.push_back(calculate_fractal(
-                FractalKind::FBM, octaves, 0.5, 2.0,
+                FractalKind::FBM, octaves, 0.5, 2.0, 0.0,
                 [&](double freq) { return core.calculate_2d(x * freq, y * freq); }
             ));
         }
@@ -328,15 +329,39 @@ static void test_range_and_distribution() {
             "fBm 2D, " + std::to_string(octaves) + " oitava(s)", fs
         );
     }
+
+    for (const auto& entry : std::array<std::pair<FractalKind, const char*>, 2>{
+             std::make_pair(FractalKind::RIDGED, "Ridged 2D"),
+             std::make_pair(FractalKind::BILLOW, "Billow 2D") }) {
+        for (int octaves : { 1, 6 }) {
+            std::vector<double> samples;
+            samples.reserve(SAMPLES);
+            std::mt19937_64 local(999);
+            std::uniform_real_distribution<double> c(-500.0, 500.0);
+            for (int i = 0; i < SAMPLES; ++i) {
+                const double x = c(local);
+                const double y = c(local);
+                samples.push_back(calculate_fractal(
+                    entry.first, octaves, 0.5, 2.0, 0.0,
+                    [&](double freq) { return core.calculate_2d(x * freq, y * freq); }
+                ));
+            }
+            const Stats fs = summarize(samples);
+            const std::string label =
+                std::string(entry.second) + ", " + std::to_string(octaves) + " oitava(s)";
+            report_stats(label, fs);
+            report_gray_usage(label, fs);
+        }
+    }
 }
 
 static void test_gradient_bias() {
-    section("Vies do hash % 12 no gradiente 3D");
+    section("Uniformidade do hash & 15 no gradiente 3D");
 
-    // O hash devolve [0,255] e 256 nao e multiplo de 12: os quatro
-    // primeiros gradientes saem 22 vezes e os outros oito, 21.
-    std::array<int, 12> buckets{};
-    for (int h = 0; h < 256; ++h) ++buckets[static_cast<size_t>(h % 12)];
+    // Com G3D[16][3] e mascara h & 15 (Perlin, 2002), 256 e multiplo
+    // exato de 16: cada um dos 16 indices ocorre exatamente 16 vezes.
+    std::array<int, 16> buckets{};
+    for (int h = 0; h < 256; ++h) ++buckets[static_cast<size_t>(h & 15)];
 
     int max_count = buckets[0];
     int min_count = buckets[0];
@@ -345,16 +370,8 @@ static void test_gradient_bias() {
         min_count = std::min(min_count, c);
     }
 
-    CHECK(max_count == 22 && min_count == 21,
-        "o vies e exatamente 22 contra 21 ocorrencias");
-
-    const double excess =
-        100.0 * (max_count - min_count) / static_cast<double>(min_count);
-    std::cout << "  info  desequilibrio de "
-              << std::fixed << std::setprecision(2) << excess
-              << "% entre o gradiente mais e o menos frequente\n";
-    std::cout << "  info  Perlin (2002) usa h & 15 com a tabela estendida"
-              << " a 16 duplicando 4 arestas\n";
+    CHECK(max_count == 16 && min_count == 16,
+        "todos os 16 indices ocorrem exatamente 16 vezes (vies 0%)");
 }
 
 static void test_fractal_layer() {
@@ -364,43 +381,123 @@ static void test_fractal_layer() {
     const double x = 3.7;
     const double y = -12.3;
 
-    // Tolerancia de 1e-6, nao de 1e-12.
-    //
-    // A API publica troca double, mas PerlinCore::calculate_2d calcula
-    // em float internamente -- o epsilon do float e ~1,2e-7, entao
-    // qualquer tolerancia abaixo disso cobra do teste uma precisao que o
-    // tipo nao tem. Sob -ffast-math a diferenca aparece de fato, porque o
-    // compilador contrai multiply-add de formas diferentes em cada ponto
-    // de inlining. Essa e a fronteira interna double/float que o cap4 do
-    // relatorio cita como politica ainda nao documentada; aqui ela fica
-    // medida.
+    // PerlinCore opera integralmente em double (53 bits de mantissa),
+    // entao a tolerancia de 1e-15 atua como trava contra truncamentos
+    // acidentais para float.
     const double single = calculate_fractal(
-        FractalKind::FBM, 1, 0.5, 2.0,
+        FractalKind::FBM, 1, 0.5, 2.0, 0.0,
         [&](double freq) { return core.calculate_2d(x * freq, y * freq); }
     );
-    CHECK_NEAR(single, core.calculate_2d(x, y), 1e-6,
+    CHECK_NEAR(single, core.calculate_2d(x, y), 1e-15,
         "1 oitava em fBm devolve o ruido de base inalterado");
 
     const double zero_octaves = calculate_fractal(
-        FractalKind::FBM, 0, 0.5, 2.0,
+        FractalKind::FBM, 0, 0.5, 2.0, 0.0,
         [&](double) { return 1.0; }
     );
-    CHECK_NEAR(zero_octaves, 0.0, 1e-12,
+    CHECK_NEAR(zero_octaves, 0.0, 1e-15,
         "0 oitavas devolve 0, sem divisao por zero");
 
     const double zero_persistence = calculate_fractal(
-        FractalKind::FBM, 8, 0.0, 2.0,
+        FractalKind::FBM, 8, 0.0, 2.0, 0.0,
         [&](double freq) { return core.calculate_2d(x * freq, y * freq); }
     );
-    CHECK_NEAR(zero_persistence, core.calculate_2d(x, y), 1e-6,
+    CHECK_NEAR(zero_persistence, core.calculate_2d(x, y), 1e-15,
         "persistencia 0 colapsa para a primeira oitava, sem NaN");
 
-    CHECK_NEAR(godot::apply_fractal_shape(FractalKind::RIDGED, 0.0), 1.0, 1e-12,
+    CHECK_NEAR(godot::apply_fractal_shape(FractalKind::RIDGED, 0.0), 1.0, 1e-15,
         "Ridged leva 0 ao topo da crista");
-    CHECK_NEAR(godot::apply_fractal_shape(FractalKind::BILLOW, 0.0), -1.0, 1e-12,
+    CHECK_NEAR(godot::apply_fractal_shape(FractalKind::BILLOW, 0.0), -1.0, 1e-15,
         "Billow leva 0 ao fundo");
-    CHECK_NEAR(godot::apply_fractal_shape(FractalKind::FBM, 0.31), 0.31, 1e-12,
+    CHECK_NEAR(godot::apply_fractal_shape(FractalKind::FBM, 0.31), 0.31, 1e-15,
         "fBm nao altera a amostra");
+
+    // --- Modulacao multifractal (weighted_strength) ---
+    // 1) weighted_strength = 0.0 deve coincidir exatamente com o somatorio
+    //    classico (sem ponderacao pelo sinal) em FBM, Ridged e Billow.
+    for (FractalKind kind : { FractalKind::FBM, FractalKind::RIDGED, FractalKind::BILLOW }) {
+        double expected_total = 0.0;
+        double expected_max = 0.0;
+        double amp = 1.0;
+        double freq = 1.0;
+        for (int i = 0; i < 6; ++i) {
+            const double s = godot::apply_fractal_shape(
+                kind, core.calculate_2d(x * freq, y * freq)
+            );
+            expected_total += s * amp;
+            expected_max += amp;
+            amp *= 0.5;
+            freq *= 2.0;
+        }
+        const double expected = expected_total / expected_max;
+        const double actual = calculate_fractal(
+            kind, 6, 0.5, 2.0, 0.0,
+            [&](double f) { return core.calculate_2d(x * f, y * f); }
+        );
+        CHECK_NEAR(actual, expected, 1e-15,
+            "weighted_strength = 0.0 coincide com o fractal classico");
+    }
+
+    // 2) Controle deterministico de 2 oitavas (persistence = 0.5, w = 1.0):
+    //    - Vale (s0 = -1.0, s1 = +1.0): weight = 0 -> amp1 = 0 -> total/max = -1.0
+    //    - Meio (s0 =  0.0, s1 = +1.0): weight = 0.5 -> amp1 = 0.25 -> 0.25/1.25 = 0.2
+    //    - Pico (s0 = +1.0, s1 = -1.0): weight = 1.0 -> amp1 = 0.5 -> (1 - 0.5)/1.5 = 1/3
+    const double valley = calculate_fractal(
+        FractalKind::FBM, 2, 0.5, 2.0, 1.0,
+        [](double f) { return f == 1.0 ? -1.0 : 1.0; }
+    );
+    CHECK_NEAR(valley, -1.0, 1e-15,
+        "weighted_strength = 1.0 zera a 2a oitava em um vale (s0 = -1)");
+
+    const double mid = calculate_fractal(
+        FractalKind::FBM, 2, 0.5, 2.0, 1.0,
+        [](double f) { return f == 1.0 ? 0.0 : 1.0; }
+    );
+    CHECK_NEAR(mid, 0.2, 1e-15,
+        "weighted_strength = 1.0 atenua pela metade em s0 = 0 (resultado 0,2)");
+
+    const double peak = calculate_fractal(
+        FractalKind::FBM, 2, 0.5, 2.0, 1.0,
+        [](double f) { return f == 1.0 ? 1.0 : -1.0; }
+    );
+    CHECK_NEAR(peak, 1.0 / 3.0, 1e-15,
+        "weighted_strength = 1.0 preserva a 2a oitava em um pico (s0 = +1)");
+
+    // 3) Clamp fora de [0, 1]
+    const double clamped_low = calculate_fractal(
+        FractalKind::FBM, 6, 0.5, 2.0, -0.5,
+        [&](double f) { return core.calculate_2d(x * f, y * f); }
+    );
+    const double exact_zero = calculate_fractal(
+        FractalKind::FBM, 6, 0.5, 2.0, 0.0,
+        [&](double f) { return core.calculate_2d(x * f, y * f); }
+    );
+    CHECK_NEAR(clamped_low, exact_zero, 1e-15,
+        "weighted_strength < 0 e limitado a 0.0");
+
+    const double clamped_high = calculate_fractal(
+        FractalKind::FBM, 6, 0.5, 2.0, 2.0,
+        [&](double f) { return core.calculate_2d(x * f, y * f); }
+    );
+    const double exact_one = calculate_fractal(
+        FractalKind::FBM, 6, 0.5, 2.0, 1.0,
+        [&](double f) { return core.calculate_2d(x * f, y * f); }
+    );
+    CHECK_NEAR(clamped_high, exact_one, 1e-15,
+        "weighted_strength > 1 e limitado a 1.0");
+}
+
+static void test_large_coordinates() {
+    section("Coordenadas grandes (acima de INT_MAX)");
+
+    PerlinCore core(42);
+    const double big = 3.0e9;
+    const double v2 = core.calculate_2d(big + 0.37, -big - 0.62);
+    const double v3 = core.calculate_3d(big + 0.37, -big - 0.62, big + 0.19);
+    CHECK(std::isfinite(v2) && std::fabs(v2) <= PerlinCore::SUPREMUM_2D + 1e-4,
+        "2D permanece finito e dentro do supremo acima de INT_MAX");
+    CHECK(std::isfinite(v3) && std::fabs(v3) <= PerlinCore::SUPREMUM_3D + 1e-4,
+        "3D permanece finito e dentro do supremo acima de INT_MAX");
 }
 
 static void test_determinism() {
@@ -448,6 +545,7 @@ int main() {
     test_continuity();
     test_determinism();
     test_fractal_layer();
+    test_large_coordinates();
     test_gradient_bias();
     test_range_and_distribution();
 

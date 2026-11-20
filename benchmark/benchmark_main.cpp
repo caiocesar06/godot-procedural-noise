@@ -66,7 +66,7 @@ uint64_t render(
     for (int64_t y = 0; y < height; ++y) {
         for (int64_t x = 0; x < width; ++x) {
             const double value = calculate_fractal(
-                FractalKind::FBM, octaves, 0.5, 2.0,
+                FractalKind::FBM, octaves, 0.5, 2.0, 0.0,
                 [&](double freq) {
                     return core.calculate_2d(
                         x * BENCH_SCALE * freq,
