@@ -24,14 +24,6 @@ namespace godot {
         }
     }
 
-    // evaluate_noise(frequency) devolve o ruído de UMA oitava já escalado
-    // pela frequência. O somatório é normalizado pela soma das amplitudes,
-    // então o resultado herda o range do ruído de base -- que NÃO é
-    // necessariamente [-1, 1]. Ver nota em perlin_core.hpp sobre o supremo
-    // sqrt(N)/2 e a concentração por TLC.
-    // Quando weighted_strength > 0, a amplitude da próxima oitava é
-    // modulada pelo sinal da oitava atual (multifractal, modelo
-    // FastNoiseLite): vales ficam mais lisos e picos concentram detalhes.
     template <typename F>
     double calculate_fractal(
         FractalKind kind,
