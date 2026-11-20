@@ -6,7 +6,7 @@
 #include <godot_cpp/variant/packed_float32_array.hpp>
 #include <godot_cpp/variant/packed_vector3_array.hpp>
 
-#include "fractal.hpp"
+#include "common/fractal.hpp"
 
 namespace godot {
     class NoiseBase : public Resource {
